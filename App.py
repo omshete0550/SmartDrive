@@ -8,8 +8,16 @@ from keras.models import load_model
 from ultralytics import YOLO
 import cvzone
 import math
+from twilio.rest import Client
+import time
 
 print("Script loaded. Import complete")
+
+# Mohib update the environment variables here
+TWILIO_ACCOUNT_SID = 'your_account_sid'
+TWILIO_AUTH_TOKEN = 'your_auth_token'
+TWILIO_PHONE_NUMBER = 'your_twilio_phone_number'
+RECIPIENT_PHONE_NUMBER = 'recipient_phone_number'
 
 # Seatbelt detection configurations
 OBJECT_DETECTION_MODEL_PATH = "./Finding-seatbelt/best.pt"
@@ -34,6 +42,16 @@ def prediction_func(img):
     class_name = CLASS_NAMES[index]
     confidence_score = pred[0][index]
     return class_name, confidence_score
+
+def send_sms(message):
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    client.messages.create(
+        body=message,
+        from_=TWILIO_PHONE_NUMBER,
+        to=RECIPIENT_PHONE_NUMBER
+    )
+
+last_alert_time = time.time()
 
 # Load the seatbelt predictor model
 predictor = load_model(PREDICTOR_MODEL_PATH, compile=False)
@@ -74,8 +92,14 @@ while True:
 
                 y_pred, score = prediction_func(img_crop)
 
-                if y_pred == CLASS_NAMES[0]:
-                    draw_color = COLOR_RED
+                if y_pred == CLASS_NAMES[0] or Class > 0:
+                    current_time = time.time()
+                    # Check if 2 hours have passed since the last alert
+                    if current_time - last_alert_time >= 7200:  # 7200 seconds = 2 hours
+                        # Send alert
+                        send_sms("Attention: Seatbelt not worn or smoking/drinking detected!")
+                        last_alert_time = current_time  # Update last alert time
+
                 elif y_pred == CLASS_NAMES[1]:
                     draw_color = COLOR_GREEN
 
