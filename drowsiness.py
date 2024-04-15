@@ -1,81 +1,63 @@
 import cv2
-from imutils.video import VideoStream
-from imutils import face_utils
-import imutils
-import dlib
-from scipy.spatial import distance as dist
-import time
 
-def eye_aspect_ratio(eye):
-    A = dist.euclidean(eye[1], eye[5])
-    B = dist.euclidean(eye[2], eye[4])
-    C = dist.euclidean(eye[0], eye[3])
-    ear = (A + B) / (2.0 * C)
-    return ear
+# Load the pre-trained face cascade
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
-EYE_AR_THRESH = 0.25
-EYE_AR_CONSEC_FRAMES = 20
+# Load the pre-trained eye cascade
+eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
 
-COUNTER = 0
-ALARM_ON = False
+# Open the webcam
+cap = cv2.VideoCapture(0)
 
-print("[INFO] Loading facial landmark predictor...")
-detector = dlib.get_frontal_face_detector()
-predictor_path = "shape_predictor_68_face_landmarks.dat"
-predictor = dlib.shape_predictor(predictor_path)
+# Initialize drowsiness flag
+drowsy = False
+print("Enter 'q' to stop")
 
-(l_start, l_end) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
-(r_start, r_end) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
-
-print("[INFO] Starting video stream...")
-vs = VideoStream(src=0).start()
-time.sleep(1.0)
-
+# Loop over frames
 while True:
-    frame = vs.read()
-    frame = imutils.resize(frame, width=450)
+    # Read a frame from the webcam
+    ret, frame = cap.read()
+    if not ret:
+        break
+    
+    # Convert the frame to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    rects = detector(gray, 0)
-
-    for rect in rects:
-        shape = predictor(gray, rect)
-        shape = face_utils.shape_to_np(shape)
-
-        left_eye = shape[l_start:l_end]
-        right_eye = shape[r_start:r_end]
-
-        left_ear = eye_aspect_ratio(left_eye)
-        right_ear = eye_aspect_ratio(right_eye)
-
-        ear = (left_ear + right_ear) / 2.0
-
-        left_eye_hull = cv2.convexHull(left_eye)
-        right_eye_hull = cv2.convexHull(right_eye)
-        cv2.drawContours(frame, [left_eye_hull], -1, (0, 255, 0), 1)
-        cv2.drawContours(frame, [right_eye_hull], -1, (0, 255, 0), 1)
-
-        if ear < EYE_AR_THRESH:
-            COUNTER += 1
-
-            if COUNTER >= EYE_AR_CONSEC_FRAMES:
-                if not ALARM_ON:
-                    ALARM_ON = True
-                    print("Drowsiness detected!")
-
-                cv2.putText(frame, "DROWSINESS ALERT!", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
+    
+    # Detect faces in the grayscale frame
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+    
+    # Loop over detected faces
+    for (x, y, w, h) in faces:
+        # Extract the region of interest (ROI) containing the face
+        roi_gray = gray[y:y + h, x:x + w]
+        roi_color = frame[y:y + h, x:x + w]
+        
+        # Detect eyes in the face ROI
+        eyes = eye_cascade.detectMultiScale(roi_gray)
+        
+        # If no eyes are detected, consider the person drowsy
+        if len(eyes) == 0:
+            drowsy = True
+            # Draw a red rectangle around the face
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            # Draw "Drowsy" text on the frame
+            cv2.putText(frame, "Drowsy", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         else:
-            COUNTER = 0
-            ALARM_ON = False
-
-        cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
+            drowsy = False
+            # Draw a green rectangle around the face
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # Draw "Awake" text on the frame
+            cv2.putText(frame, "Awake", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    
+    # Display the frame
     cv2.imshow("Frame", frame)
-    key = cv2.waitKey(1) & 0xFF
-
-    if key == ord("q"):
+    
+    # Break the loop if 'q' is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Release the webcam and close all windows
+cap.release()
 cv2.destroyAllWindows()
-vs.stop()
+
+
