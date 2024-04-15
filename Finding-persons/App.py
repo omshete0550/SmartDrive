@@ -1,14 +1,18 @@
 import cv2
 import sys
 
+INPUT_VIDEO = 'cigar1.mp4'
 cascPath = './File.xml'
 faceCascade = cv2.CascadeClassifier(cascPath)
 
-video_capture = cv2.VideoCapture(0)
+video_capture = cv2.VideoCapture(INPUT_VIDEO)
 
 while True:
     # Capture frame-by-frame
     ret, frame = video_capture.read()
+
+    # Resize the frame to a smaller size
+    frame = cv2.resize(frame, (1000, 600))  # Adjust the size as needed
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
