@@ -13,7 +13,7 @@ import time
 
 print("Script loaded. Import complete")
 
-# Mohib update the environment variables here
+# Hamza update the environment variables here
 TWILIO_ACCOUNT_SID = 'your_account_sid'
 TWILIO_AUTH_TOKEN = 'your_auth_token'
 TWILIO_PHONE_NUMBER = 'your_twilio_phone_number'
@@ -32,6 +32,10 @@ INPUT_VIDEO = 0;
 OUTPUT_FILE = 'output/test_result_'+ dt.datetime.strftime(dt.datetime.now(), "%Y%m%d%H%M%S") +'.mp4'
 COLOR_GREEN = (0, 255, 0)
 COLOR_RED = (255, 0, 0)
+
+def log_activity(activity):
+    with open('activity_log.txt', 'a') as file:
+        file.write(activity + '\n')
 
 def prediction_func(img):
     img = cv2.resize(img, (224, 224), interpolation=cv2.INTER_AREA)
@@ -86,26 +90,29 @@ while True:
             boxes = results.xyxy[0]
             boxes = boxes.cpu()
             for j in boxes:
-                x1, y1, x2, y2, score, y_pred = j.numpy()
+                x1, y1, x2, y2, score, class_index = j.numpy()
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                 img_crop = img[y1:y2, x1:x2]
 
                 y_pred, score = prediction_func(img_crop)
 
-                if y_pred == CLASS_NAMES[0] or Class > 0:
+                if y_pred == CLASS_NAMES[0] or class_index > 0:
+                    log_activity(f'Seatbelt not worn at frame {frame_count}')
                     current_time = time.time()
                     # Check if 2 hours have passed since the last alert
                     if current_time - last_alert_time >= 7200:  # 7200 seconds = 2 hours
                         # Send alert
-                        send_sms("Attention: Seatbelt not worn or smoking/drinking detected!")
+                        send_sms("Attention: Seatbelt not worn detected!")
                         last_alert_time = current_time  # Update last alert time
 
                 elif y_pred == CLASS_NAMES[1]:
+                    log_activity(f'Seatbelt worn detected at frame {frame_count}')
                     draw_color = COLOR_GREEN
 
                 if score >= THRESHOLD_SCORE:
                     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
                     cv2.putText(img, f'{y_pred} {str(score)[:4]}', (x1-10, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, draw_color, 2)
+
 
             # Detect smoking and drinking
             result = smoking_drinking_model(img, stream=True)
@@ -116,6 +123,7 @@ while True:
                     connfidence = math.ceil(connfidence * 100)
                     Class = int(box.cls[0])
                     if connfidence >= THRESHOLD_SCORE:
+                        log_activity(f'{classnames[Class]} detected with {connfidence}% confidence at frame {frame_count}')
                         x1, y1, x2, y2 = box.xyxy[0]
                         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                         cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 5)

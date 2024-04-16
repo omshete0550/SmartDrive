@@ -16,7 +16,7 @@ THRESHOLD_SCORE = 0.99
 
 SKIP_FRAMES = 1 # skips every 2 frames
 MAX_FRAME_RECORD = 500
-INPUT_VIDEO = 0 #'sample/test_2.mp4'
+INPUT_VIDEO = 'testvideo2.mp4' #'sample/test_2.mp4'
 OUTPUT_FILE = 'output/test_result_'+ dt.datetime.strftime(dt.datetime.now(), "%Y%m%d%H%M%S") +'.mp4'
 
 COLOR_GREEN = (0, 255, 0)
