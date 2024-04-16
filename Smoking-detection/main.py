@@ -26,6 +26,7 @@ while True:
                 x1, y1, x2, y2 = int(x1),int(y1),int(x2),int(y2)
                 cv2.rectangle(frame,(x1,y1),(x2,y2),(0,0,255),5)
                 cvzone.putTextRect(frame, f'{classnames[Class]} {connfidence}%', [x1+8, y1+100], scale=1.5, thickness=2)
+                
 
     cv2.imshow('frame', frame)
     cv2.waitKey(1)
