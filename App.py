@@ -8,7 +8,7 @@ from keras.models import load_model
 from ultralytics import YOLO
 import cvzone
 import math
-from twilio.rest import Client
+# from twilio.rest import Client
 import time
 
 print("Script loaded. Import complete")
@@ -26,7 +26,7 @@ CLASS_NAMES = {0: 'No Seatbelt worn', 1: 'Seatbelt Worn'}
 THRESHOLD_SCORE = 0.99
 SKIP_FRAMES = 1
 MAX_FRAME_RECORD = 500
-INPUT_VIDEO = './driver1compdouble.mp4'
+INPUT_VIDEO = './mohibtemp.mp4'
 OUTPUT_FILE = 'output/test_result_'+ dt.datetime.strftime(dt.datetime.now(), "%Y%m%d%H%M%S") +'.mp4'
 COLOR_GREEN = (0, 255, 0)
 COLOR_RED = (255, 0, 0)
@@ -48,13 +48,13 @@ def prediction_func(img):
     confidence_score = pred[0][index]
     return class_name, confidence_score
 
-def send_sms(message):
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-    client.messages.create(
-        body=message,
-        from_=TWILIO_PHONE_NUMBER,
-        to=RECIPIENT_PHONE_NUMBER
-    )
+# def send_sms(message):
+#     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+#     client.messages.create(
+#         body=message,
+#         from_=TWILIO_PHONE_NUMBER,
+#         to=RECIPIENT_PHONE_NUMBER
+#     )
 
 last_alert_time = time.time()
 
@@ -78,7 +78,7 @@ size = (frame_width, frame_height)
 os.makedirs(OUTPUT_FILE.rsplit("/", 1)[0], exist_ok=True)
 
 # Define the codec and create a VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
 out = cv2.VideoWriter(OUTPUT_FILE, fourcc, 20.0, (output_width, output_height))
 
 def draw_dashboard(img, smoking_detected, drinking_detected, seatbelt_detected):
@@ -128,7 +128,7 @@ try:
                         # Check if 2 hours have passed since the last alert
                         if current_time - last_alert_time >= 7200:  # 7200 seconds = 2 hours
                             # Send alert
-                            send_sms("Attention: Seatbelt not worn detected!")
+                            # send_sms("Attention: Seatbelt not worn detected!")
                             last_alert_time = current_time  # Update last alert time
 
                     elif y_pred == CLASS_NAMES[1]:
