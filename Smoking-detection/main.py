@@ -4,7 +4,7 @@ import cv2
 import math
 
 # Running real time from webcam
-cap = cv2.VideoCapture('./test_video2.mp4')
+cap = cv2.VideoCapture('../mohibtemp.mp4')
 model = YOLO('./best.pt')
 
 # Reading the classes
