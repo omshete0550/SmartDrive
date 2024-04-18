@@ -27,11 +27,14 @@ THRESHOLD_SCORE = 0.99
 SKIP_FRAMES = 1
 MAX_FRAME_RECORD = 500
 # INPUT_VIDEO = './Finding-seatbelt/testvideo4.mp4'
-# INPUT_VIDEO = './Smoking-detection/cigar1.mp4'
-INPUT_VIDEO = 0;
+INPUT_VIDEO = './driver1compdouble.mp4'
+# INPUT_VIDEO = 0;
 OUTPUT_FILE = 'output/test_result_'+ dt.datetime.strftime(dt.datetime.now(), "%Y%m%d%H%M%S") +'.mp4'
 COLOR_GREEN = (0, 255, 0)
 COLOR_RED = (255, 0, 0)
+
+output_width = 1000
+output_height = 600
 
 def log_activity(activity):
     with open('activity_log.txt', 'a') as file:
@@ -130,6 +133,8 @@ while True:
                         cvzone.putTextRect(img, f'{classnames[Class]} {connfidence}%', [x1+8, y1+100], scale=1.5, thickness=2)
 
             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            cv2.namedWindow('Video feed', cv2.WINDOW_NORMAL)
+            cv2.resizeWindow('Video feed', output_width, output_height)
             cv2.imshow('Video feed', img)
 
     else:
