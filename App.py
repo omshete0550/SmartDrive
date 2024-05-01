@@ -77,9 +77,11 @@ def filter_detections(
     return filtered_boxes
 
 
-def draw_dashboard(img, smoking_detected, drinking_detected, seatbelt_detected, drowsy):
+def draw_dashboard(
+    img, smoking_detected, drinking_detected, seatbelt_detected, drowsy, face_count
+):
     overlay = img.copy()
-    alpha = 0.5  # Transparency factor
+    alpha = 0  # Transparency factor
     dashboard_color = (0, 0, 0)  # Black background
     cv2.rectangle(overlay, (0, 0), (output_width, 100), dashboard_color, -1)
     cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0, img)
@@ -121,15 +123,18 @@ def draw_dashboard(img, smoking_detected, drinking_detected, seatbelt_detected, 
         (255, 255, 255),
         1,
     )
+
+    # Dynamically display occupancy using face count
     cv2.putText(
         img,
-        "Occupancy: 3",
+        f"Occupancy: {face_count}",
         (indicator_start_x + 350, 115),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.5,
         (255, 255, 255),
         1,
     )
+
     cv2.rectangle(
         img,
         (indicator_start_x + 450, 2),
@@ -155,19 +160,11 @@ def draw_dashboard(img, smoking_detected, drinking_detected, seatbelt_detected, 
         img,
         (indicator_start_x + 450, 80),
         (indicator_start_x + 450 + indicator_size, 80 + indicator_size),
-        (0, 255, 0) if not drowsy else (0, 0, 255),
-        -1,
-    )
-    cv2.rectangle(
-        img,
-        (indicator_start_x + 450, 100),
-        (indicator_start_x + 450 + indicator_size, 80 + indicator_size),
-        (0, 255, 0) if not drowsy else (0, 0, 255),
+        (0, 255, 0) if drowsy else (0, 0, 255),
         -1,
     )
 
 
-last_alert_time = time.time()
 predictor = load_model(PREDICTOR_MODEL_PATH, compile=False)
 print("Predictor loaded")
 model = torch.hub.load(
@@ -232,9 +229,6 @@ try:
                     if y_pred == CLASS_NAMES[0] or class_index > 0:
                         log_activity(f"Seatbelt not worn at frame {frame_count}")
                         seatbelt_detected = False
-                        current_time = time.time()
-                        if current_time - last_alert_time >= 7200:
-                            last_alert_time = current_time
                     elif y_pred == CLASS_NAMES[1]:
                         seatbelt_detected = True
                         log_activity(f"Seatbelt worn detected at frame {frame_count}")
@@ -330,6 +324,16 @@ try:
                             (0, 255, 0),
                             1,
                         )
+
+                # Call the draw_dashboard function with dynamic occupancy
+                draw_dashboard(
+                    img,
+                    smoking_detected,
+                    drinking_detected,
+                    seatbelt_detected,
+                    drowsy,
+                    face_count,
+                )
 
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 cv2.namedWindow("Video feed", cv2.WINDOW_NORMAL)
