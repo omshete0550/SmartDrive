@@ -1,6 +1,9 @@
 # SmartDrive
 
 <br/>
+<p align="center">
+  <img src="./assets/logo.png" width="20%" alt="logo"/>
+</p>
 
 <p align="center">
   <a href="#table-of-contents"><b>Explore the docs »</b></a>
