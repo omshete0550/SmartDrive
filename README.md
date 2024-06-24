@@ -21,7 +21,6 @@
 - [Demonstration & Features](#demonstration)
 - [Technologies Used](#technologies-used)
 - [Contributing](#contributing)
-<!-- - [License](#license) -->
 - [Authors](#authors)
 
 ## About The Project
