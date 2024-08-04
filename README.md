@@ -51,10 +51,10 @@ Through these initiatives, we aim to substantially reduce road accidents and enh
 ## Demonstration
 
 **Back Cam**
-<img src="./assets/demo1.png" alt="demo">
+<img src="./assets/Demo1.png" alt="demo">
 <br />
 **Front Cam**
-<img src="./assets/demo2.jpg" alt="demo">
+<img src="./assets/Demo2.jpg" alt="demo">
 <br />
 
 ## Architecture
